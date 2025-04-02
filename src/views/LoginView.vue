@@ -152,7 +152,7 @@ const onSignup = () => {
         <form novalidate @submit.prevent="onLogin">
           <ion-list>
             <ion-item class="custom-input">
-              <ion-input v-model="username" type="text" placeholder="Nombre de usuario" required></ion-input>
+              <ion-input v-model="email" type="email" placeholder="Correo electrónico" required></ion-input>
             </ion-item>
 
             <ion-item class="custom-input">
@@ -176,29 +176,35 @@ const onSignup = () => {
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import {
-  IonPage,
-  IonContent,
-  IonList,
-  IonItem,
-  IonButton,
-  IonInput,
-  IonToast,
-} from "@ionic/vue";
+import { IonPage, IonContent, IonList, IonItem, IonButton, IonInput, IonToast } from "@ionic/vue";
+import { auth } from "@/firebase-config";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 const router = useRouter();
-const username = ref("");
+const email = ref("");
 const password = ref("");
 const showToast = ref(false);
 const toastMessage = ref("");
-const canSubmit = computed(() => username.value.trim() !== "" && password.value.trim() !== "");
+const canSubmit = computed(() => email.value.trim() !== "" && password.value.trim() !== "");
 
-const onLogin = () => {
-  if (canSubmit.value) {
-    showToast.value = true;
+const onLogin = async () => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+    console.log("Usuario autenticado:", userCredential.user);
+
     toastMessage.value = "Inicio de sesión exitoso";
+    showToast.value = true;
+
+    // Redirigir a la página de inicio después de un breve retraso
+    setTimeout(() => {
+      router.push("/home");
+    }, 1000);
+  } catch (error) {
+    console.error("Error en el inicio de sesión:", error);
+    toastMessage.value = "Error: " + error.message;
+    showToast.value = true;
   }
 };
 
@@ -208,7 +214,7 @@ const onSignup = () => {
 </script>
 
 <style scoped>
-/* Centra el contenido en la pantalla */
+/* Estilos iguales a los que ya tenías */
 .content-center {
   display: flex;
   justify-content: center;
@@ -217,7 +223,6 @@ const onSignup = () => {
   background-color: #f4f4f4;
 }
 
-/* Tarjeta blanca para el login */
 .login-container {
   width: 90%;
   max-width: 350px;
@@ -228,27 +233,23 @@ const onSignup = () => {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Logo dentro de la tarjeta */
 .login-logo img {
   max-width: 120px;
   margin-bottom: 10px;
 }
 
-/* Títulos */
 h2 {
   font-size: 20px;
   font-weight: bold;
   margin-bottom: 20px;
 }
 
-/* Inputs personalizados */
 .custom-input {
   border-radius: 8px;
   background: #e9ecef;
   margin-bottom: 12px;
 }
 
-/* Botón principal */
 .custom-button {
   width: 100%;
   margin-top: 15px;
@@ -256,7 +257,6 @@ h2 {
   color: white;
 }
 
-/* Enlace para recuperar contraseña */
 .forgot-password {
   display: block;
   text-align: center;
@@ -269,7 +269,6 @@ h2 {
   text-decoration: underline;
 }
 
-/* Texto de registro */
 .register-text {
   margin-top: 15px;
   font-size: 14px;
