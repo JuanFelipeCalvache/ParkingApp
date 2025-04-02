@@ -144,7 +144,7 @@ const onSignup = () => {
       <div class="login-container">
         <!-- Logo dentro de la card -->
         <div class="login-logo">
-          <img src="C:\Users\andre\ParkingApp\public\logo.png" alt="ParkControl Logo" />
+          <img src="/logo.png" alt="ParkControl Logo" />
         </div>
 
         <h2>Inicio de Sesión</h2>
@@ -166,7 +166,7 @@ const onSignup = () => {
             Iniciar Sesión
           </ion-button>
 
-          <p class="register-text">¿No tienes cuenta? <a href="#" @click="onSignup">Regístrate</a></p>
+          <p class="register-text">¿No tienes cuenta?<router-link to="/signup">Regístrate</router-link></p>
         </form>
       </div>
 
@@ -211,6 +211,7 @@ const onLogin = async () => {
 const onSignup = () => {
   router.push("/signup");
 };
+
 </script>
 
 <style scoped>
