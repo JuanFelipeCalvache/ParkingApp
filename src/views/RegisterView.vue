@@ -14,84 +14,39 @@
         <h2 class="title">Registro</h2>
         <form @submit.prevent="register">
           <ion-list>
-
             <ion-item>
-              <ion-label position="floating" class="floating-label">
-                Name
-              </ion-label>
-              <ion-input 
-                type="text"
-                v-model="name"
-                placeholder="Name"
-                required
-              ></ion-input>
-            </ion-item>
-
-            <!-- Campo de Email -->
-            <ion-item>
-              <ion-label position="floating" class="floating-label">
-                Email
-              </ion-label>
-              <ion-input 
-                type="email"
-                v-model="email"
-                placeholder="Email"
-                required
-              ></ion-input>
+              <ion-label position="floating">Nombre</ion-label>
+              <ion-input type="text" v-model="name" required></ion-input>
             </ion-item>
 
             <ion-item>
-              <ion-label position="floating" class="floating-label">
-                Telefono
-              </ion-label>
-              <ion-input 
-                type="tel"
-                v-model="telefono"
-                placeholder="Numero de telefono"
-                required
-              ></ion-input>
+              <ion-label position="floating">Email</ion-label>
+              <ion-input type="email" v-model="email" required></ion-input>
             </ion-item>
-  
-            <!-- Campo de Contraseña -->
+
             <ion-item>
-              <ion-label position="floating" class="floating-label">
-                Contraseña
-              </ion-label>
-              <ion-input
-                type="password"
-                v-model="password"
-                placeholder="Contraseña"
-                required
-              ></ion-input>
+              <ion-label position="floating">Teléfono</ion-label>
+              <ion-input type="tel" v-model="telefono" required></ion-input>
             </ion-item>
-  
-            <!-- Campo de Confirmar Contraseña -->
+
             <ion-item>
-              <ion-label position="floating" class="floating-label">
-                Confirmar Contraseña
-              </ion-label>
-              <ion-input
-                type="password"
-                v-model="confirmPassword"
-                placeholder="Confirmar Contraseña"
-                required
-              ></ion-input>
+              <ion-label position="floating">Contraseña</ion-label>
+              <ion-input type="password" v-model="password" required></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="floating">Confirmar Contraseña</ion-label>
+              <ion-input type="password" v-model="confirmPassword" required></ion-input>
             </ion-item>
           </ion-list>
-  
-          <!-- Botón de Registro -->
-          <ion-button expand="block" type="submit" class="form-submit">
-            Registrarse
-          </ion-button>
+
+          <ion-button expand="block" type="submit">Registrarse</ion-button>
         </form>
-        
+
         <div style="text-align: center;">
           <ion-text>
             ¿Ya tienes cuenta?
-            <ion-text
-              @click="goToLogin"
-              style="cursor: pointer; color: var(--ion-color-primary);"
-            >
+            <ion-text @click="goToLogin" style="cursor: pointer; color: var(--ion-color-primary);">
               Login
             </ion-text>
           </ion-text>
@@ -104,21 +59,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonButtons,
-  IonMenuButton,
-  IonTitle,
-  IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonButton,
-  IonText,
-} from "@ionic/vue";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "@/firebase-config";
+import { IonPage, IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, IonContent, IonList, IonItem, IonLabel, IonInput, IonButton, IonText } from "@ionic/vue";
 
 const router = useRouter();
 
@@ -128,17 +72,45 @@ const telefono = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 
-const register = (e: Event) => {
-  e.preventDefault();
+const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  if (password.value !== confirmPassword.value) {
-    alert("Las contraseñas no coinciden");
+const register = async () => {
+  console.log("Email ingresado:", email.value);
+
+  if (!email.value) {
+    alert("El campo de email está vacío.");
     return;
   }
 
-  // Lógica para registrar al usuario
-  alert("Registro exitoso");
-  router.push("/login");
+  if (!isValidEmail(email.value)) {
+    alert("Por favor, introduce un correo válido.");
+    return;
+  }
+
+  if (password.value !== confirmPassword.value) {
+    alert("Las contraseñas no coinciden.");
+    return;
+  }
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
+    const user = userCredential.user;
+    console.log("Usuario creado con éxito:", user);
+
+    await setDoc(doc(db, "users", user.uid), {
+      name: name.value,
+      email: email.value,
+      telefono: telefono.value,
+      uid: user.uid,
+      createdAt: new Date(),
+    });
+
+    alert("Registro exitoso");
+    router.push("/login");
+  } catch (error: any) {
+    console.error("Error en el registro:", error);
+    alert("Error en el registro: " + (error.message || "Ocurrió un error desconocido"));
+  }
 };
 
 const goToLogin = () => {
@@ -158,10 +130,6 @@ const goToLogin = () => {
 
 .title {
   text-align: center;
-  margin-bottom: 20px;
-}
-
-.floating-label {
   margin-bottom: 20px;
 }
 </style>
